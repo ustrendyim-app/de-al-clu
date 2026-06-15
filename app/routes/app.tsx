@@ -10,8 +10,8 @@ export const loader = async ({ request }: LoaderFunctionArgs) => {
 
   await billing.require({
     plans: [MONTHLY_PLAN],
-    isTest: false,
-    onFailure: async () => billing.request({ plan: MONTHLY_PLAN, isTest: false }),
+    isTest: true,
+    onFailure: async () => billing.request({ plan: MONTHLY_PLAN, isTest: true }),
   });
 
   // eslint-disable-next-line no-undef
