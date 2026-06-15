@@ -172,7 +172,11 @@ export default function Index() {
   const selectedOrdersData = dealclubOrders.filter((o: any) => selectedOrders.includes(o.id)).map((o: any) => o.rawOrder);
 
   return (
-    <s-page heading="Dealclub Bestellimport Einstellungen">
+    <s-page fullWidth={false}>
+      <div style={{ display: 'flex', alignItems: 'center', marginBottom: '2rem' }}>
+        <img src="/logo.png" alt="Dealclub Logo" style={{ height: '40px', marginRight: '1rem' }} />
+        <h1 style={{ fontSize: '1.5rem', fontWeight: 'bold', margin: 0 }}>Dealclub Bestellimport Einstellungen</h1>
+      </div>
       <s-section heading="API-Verbindung">
         <s-paragraph>
           Geben Sie hier Ihren Dealclub Kunden-Token (API-Key) ein, um Bestellungen in Ihren Shopify-Shop zu importieren.
