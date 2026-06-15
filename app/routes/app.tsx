@@ -11,13 +11,7 @@ export const loader = async ({ request }: LoaderFunctionArgs) => {
   await billing.require({
     plans: [MONTHLY_PLAN],
     isTest: true,
-    onFailure: async () => {
-      try {
-        await billing.request({ plan: MONTHLY_PLAN, isTest: true });
-      } catch (e: any) {
-        throw new Error("SHOPIFY FATURA HATASI: " + JSON.stringify(e?.errorData || e?.message));
-      }
-    },
+    onFailure: async () => await billing.request({ plan: MONTHLY_PLAN, isTest: true }),
   });
 
   // eslint-disable-next-line no-undef
