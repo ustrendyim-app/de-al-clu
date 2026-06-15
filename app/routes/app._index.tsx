@@ -186,10 +186,13 @@ export default function Index() {
                 id="apiToken"
                 name="apiToken" 
                 defaultValue={apiToken}
-                placeholder="z.B.: d4ad047a-7c29-4dc1-88a6-f887d4be600c"
+                placeholder="Ihr API-Key"
                 style={{ width: '100%', padding: '0.5rem', border: '1px solid #ccc', borderRadius: '4px' }}
                 required
               />
+              <div style={{ marginTop: '0.5rem', fontSize: '0.9rem', color: '#666' }}>
+                Sie haben noch keinen API-Key? Fordern Sie diesen ganz einfach über unser <a href="https://www.dealclub.de/kontakt" target="_blank" rel="noreferrer" style={{color: '#005bd3', textDecoration: 'none'}}>Kontaktformular</a> an oder schreiben Sie uns eine E-Mail an <strong>info@dealclub.de</strong> (Tel: 02131/3849851).
+              </div>
             </div>
             
             <s-button type="submit" variant="primary" {...(isSaving ? { loading: true } : {})}>
