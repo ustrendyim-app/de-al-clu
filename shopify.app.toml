@@ -1,7 +1,7 @@
 # Learn more about configuring your app at https://shopify.dev/docs/apps/tools/cli/configuration
 
 client_id = "b3c7cbc6c79ae53ff3fd798fe434a53e"
-application_url = "https://shopify.dev/apps/default-app-home"
+application_url = "https://de-al-clu.vercel.app"
 embedded = true
 name = "Dealclub Bestellungen"
 
@@ -12,6 +12,11 @@ scopes = "write_orders,read_orders"
 [webhooks]
 api_version = "2026-07"
 
+[webhooks.privacy_compliance]
+customer_deletion_url = "https://de-al-clu.vercel.app/webhooks/compliance"
+customer_data_request_url = "https://de-al-clu.vercel.app/webhooks/compliance"
+shop_deletion_url = "https://de-al-clu.vercel.app/webhooks/compliance"
+
   [[webhooks.subscriptions]]
   uri = "/webhooks/app/uninstalled"
   topics = [ "app/uninstalled" ]
@@ -21,7 +26,7 @@ api_version = "2026-07"
   topics = [ "app/scopes_update" ]
 
 [auth]
-redirect_urls = [ "https://shopify.dev/apps/default-app-home/api/auth" ]
+redirect_urls = [ "https://de-al-clu.vercel.app/api/auth", "https://de-al-clu.vercel.app/auth/callback", "https://de-al-clu.vercel.app/api/auth/callback" ]
 
 [build]
 include_config_on_deploy = true

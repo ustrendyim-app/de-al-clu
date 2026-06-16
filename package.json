@@ -2,7 +2,7 @@
   "name": "app",
   "private": true,
   "scripts": {
-    "build": "react-router build",
+    "build": "prisma generate && prisma db push && react-router build",
     "vercel-build": "prisma generate && prisma db push && react-router build",
     "web:dev": "prisma generate && react-router dev",
     "dev": "shopify app dev",
