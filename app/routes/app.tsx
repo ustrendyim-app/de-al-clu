@@ -23,6 +23,8 @@ export default function App() {
 
   return (
     <AppProvider embedded apiKey={apiKey}>
+      <meta name="shopify-api-key" content={apiKey} />
+      <script src="https://cdn.shopify.com/shopifycloud/app-bridge.js"></script>
       <s-app-nav>
         <s-link href="/app">Home</s-link>
         <s-link href="/app/additional">Additional page</s-link>
