@@ -20,6 +20,7 @@ export const loader = async ({ request }: LoaderFunctionArgs) => {
   if (type === "statuses") {
     try {
       const res = await fetch(`${DEALCLUB_BASE_URL}/api/order/statuses`, {
+        cache: 'no-store',
         headers: { 
           'apiKey': apiKey.trim(), 
           'Accept': 'application/json',
@@ -44,6 +45,7 @@ export const loader = async ({ request }: LoaderFunctionArgs) => {
     
     try {
       const res = await fetch(`${DEALCLUB_BASE_URL}/api/orders?page=0&size=100&externalStatus=${statusId}&updatedAt=${updatedAt}`, {
+        cache: 'no-store',
         headers: { 
           'apiKey': apiKey.trim(), 
           'Accept': 'application/json', 

@@ -1,13 +1,23 @@
 import { useState, useEffect, useCallback, useRef } from "react";
 import type { ActionFunctionArgs, LoaderFunctionArgs, HeadersFunction } from "react-router";
 import { useFetcher, useLoaderData, useSearchParams } from "react-router";
+import { redirect } from "react-router";
 import { useAppBridge } from "@shopify/app-bridge-react";
-import { authenticate } from "../shopify.server";
+import { authenticate, MONTHLY_PLAN } from "../shopify.server";
 import prisma from "../db.server";
 import { boundary } from "@shopify/shopify-app-react-router/server";
 
 export const loader = async ({ request }: LoaderFunctionArgs) => {
-  const { session } = await authenticate.admin(request);
+  const { session, billing } = await authenticate.admin(request);
+  const { hasActivePayment } = await billing.check({
+    plans: [MONTHLY_PLAN],
+    isTest: true,
+  });
+
+  if (!hasActivePayment) {
+    throw redirect("/app/pricing");
+  }
+
   const url = new URL(request.url);
   const days = parseInt(url.searchParams.get('days') || "14", 10); // Varsayılan 14 gün olsun
 
@@ -81,8 +91,9 @@ export default function Index() {
       const date = new Date();
       date.setDate(date.getDate() - selectedDays);
       const updatedAt = Math.floor(date.getTime() / 1000);
+      const cb = Date.now();
       
-      const statusRes = await fetch(`/api/dealclub-fetch?type=statuses&updatedAt=${updatedAt}`);
+      const statusRes = await fetch(`/api/dealclub-fetch?type=statuses&updatedAt=${updatedAt}&cb=${cb}`);
       const statusData = await statusRes.json();
       
       if (fetchIdRef.current !== currentFetchId) return;
@@ -100,15 +111,18 @@ export default function Index() {
         if (fetchIdRef.current !== currentFetchId) return;
 
         try {
-          const res = await fetch(`/api/dealclub-fetch?type=orders&statusId=${status.id}&statusName=${encodeURIComponent(status.description || '')}&updatedAt=${updatedAt}`);
+          const res = await fetch(`/api/dealclub-fetch?type=orders&statusId=${status.id}&statusName=${encodeURIComponent(status.description || '')}&updatedAt=${updatedAt}&cb=${cb}`);
           const data = await res.json();
           if (data.success && data.orders.length > 0) {
              allFoundOrders = [...allFoundOrders, ...data.orders];
              allFoundOrders.sort((a, b) => b.creationDateTs - a.creationDateTs);
              setDealclubOrders([...allFoundOrders]);
+          } else if (!data.success) {
+             console.error(`Error for status ${status.id}:`, data.error);
+             shopify.toast.show(`API Fehler bei Status ${status.id}: ${data.error}`, { isError: true });
           }
         } catch (e) {
-          console.error(`Error fetching status ${status.id}:`, e);
+          console.error(`Network error fetching status ${status.id}:`, e);
         }
         setProgress(p => ({ ...p, current: p.current + 1 }));
         await new Promise(r => setTimeout(r, 300));
