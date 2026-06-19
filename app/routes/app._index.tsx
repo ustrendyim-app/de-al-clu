@@ -14,10 +14,6 @@ export const loader = async ({ request }: LoaderFunctionArgs) => {
     isTest: true,
   });
 
-  if (!hasActivePayment) {
-    throw redirect("/app/pricing");
-  }
-
   const url = new URL(request.url);
   const days = parseInt(url.searchParams.get('days') || "14", 10); // Varsayılan 14 gün olsun
 
@@ -34,13 +30,23 @@ export const loader = async ({ request }: LoaderFunctionArgs) => {
   return { 
     apiToken: settings?.apiToken || "",
     logs: recentLogs,
-    days
+    days,
+    hasActivePayment
   };
 };
 
 export const action = async ({ request }: ActionFunctionArgs) => {
-  const { session } = await authenticate.admin(request);
+  const { session, billing } = await authenticate.admin(request);
   const formData = await request.formData();
+  
+  const intent = formData.get("intent")?.toString();
+  if (intent === "subscribe") {
+    await billing.request({
+      plan: MONTHLY_PLAN,
+      isTest: true,
+    });
+    return null;
+  }
   
   const apiToken = formData.get("apiToken")?.toString() || "";
   
@@ -56,7 +62,7 @@ export const action = async ({ request }: ActionFunctionArgs) => {
 };
 
 export default function Index() {
-  const { apiToken, logs, days } = useLoaderData<typeof loader>();
+  const { apiToken, logs, days, hasActivePayment } = useLoaderData<typeof loader>();
   const fetcher = useFetcher<typeof action>();
   const syncFetcher = useFetcher<any>();
   const shopify = useAppBridge();
@@ -79,7 +85,7 @@ export default function Index() {
   const fetchIdRef = useRef(0);
 
   const fetchOrdersProgressively = useCallback(async (selectedDays: number) => {
-    if (!apiToken) return;
+    if (!apiToken || !hasActivePayment) return;
     const currentFetchId = ++fetchIdRef.current;
 
     setIsLoadingOrders(true);
@@ -133,7 +139,7 @@ export default function Index() {
     } finally {
       setIsLoadingOrders(false);
     }
-  }, [apiToken, shopify]);
+  }, [apiToken, shopify, hasActivePayment]);
 
   useEffect(() => {
     fetchOrdersProgressively(days);
@@ -173,6 +179,41 @@ export default function Index() {
   const handleSelect = (id: string) => {
     setSelectedOrders(prev => prev.includes(id) ? prev.filter(x => x !== id) : [...prev, id]);
   };
+
+  if (!hasActivePayment) {
+    return (
+      <s-page fullWidth={false}>
+        <div style={{ display: 'flex', alignItems: 'center', marginBottom: '2rem' }}>
+          <img src="/logo.png" alt="Dealclub Logo" style={{ height: '40px', marginRight: '1rem' }} />
+          <h1 style={{ fontSize: '1.5rem', fontWeight: 'bold', margin: 0 }}>Abonnement erforderlich</h1>
+        </div>
+        
+        <s-section heading="Ihre Abonnement-Details">
+          <s-paragraph>
+            Sie haben derzeit kein aktives Abonnement. Um die DealClub Bestellungen mit Shopify zu synchronisieren, ist das Standard-Abo erforderlich.
+          </s-paragraph>
+
+          <div style={{ marginTop: '2rem', padding: '1.5rem', border: '1px solid #c9cccf', borderRadius: '8px', maxWidth: '400px', backgroundColor: '#fff' }}>
+            <h2 style={{ fontSize: '1.25rem', fontWeight: 'bold', marginBottom: '0.5rem' }}>Standard-Abo</h2>
+            <p style={{ fontSize: '1.5rem', fontWeight: 'bold', color: '#008060', marginBottom: '1rem' }}>$5.49 <span style={{ fontSize: '1rem', color: '#666', fontWeight: 'normal' }}>/ Monat</span></p>
+            <ul style={{ paddingLeft: '1.2rem', marginBottom: '1.5rem', lineHeight: '1.8' }}>
+              <li>Automatische Bestell-Synchronisation</li>
+              <li>Nahtlose API Integration</li>
+              <li>Echtzeit-Aktualisierung</li>
+              <li>Zuverlässiger Datenimport</li>
+            </ul>
+
+            <fetcher.Form method="post">
+              <input type="hidden" name="intent" value="subscribe" />
+              <s-button type="submit" variant="primary" fullWidth {...(isSaving ? { loading: true } : {})}>
+                {isSaving ? "Wird verarbeitet..." : "Jetzt Abonnieren"}
+              </s-button>
+            </fetcher.Form>
+          </div>
+        </s-section>
+      </s-page>
+    );
+  }
 
   const filteredOrders = showOnlyNeu 
     ? dealclubOrders.filter((o: any) => o.syncStatus === 'NEU')
